@@ -116,7 +116,6 @@ CheckElement(float value)
  * Allocate and initialize a new vector
  */
 Vector *
-// REFACTOR_CANDIDATE: METHOD(init) FOR_CLASS(Vector)
 InitVector(int dim)
 {
 	Vector	   *result;

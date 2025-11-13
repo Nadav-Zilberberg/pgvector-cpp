@@ -56,11 +56,6 @@ constexpr auto HALF_MAX = 65504;
 
 constexpr std::size_t HALFVEC_MAX_DIM = 16000;
 
-// Forward declaration for PostgreSQL types
-extern "C" {
-typedef uintptr_t Datum;
-}
-
 // Template class for flexible half type support
 template<typename T = half>
 class HalfVector {
@@ -77,6 +72,18 @@ public:
     static std::size_t size(std::size_t dim) {
         return offsetof(HalfVector, x) + sizeof(T) * dim;
     }
+
+    static HalfVector* from_datum(void* datum) {
+        return reinterpret_cast<HalfVector*>(PG_DETOAST_DATUM(datum));
+    }
+
+    static HalfVector* from_arg(int n) {
+        return from_datum(PG_GETARG_DATUM(n));
+    }
+
+    static Datum return_pointer(HalfVector* vec) {
+        return PG_RETURN_POINTER(vec);
+    }
 };
 
 // Type alias for default half type
@@ -86,5 +93,10 @@ using HalfVector_p = HalfVector<>;
 HalfVector_p* InitHalfVector(int dim);
 
 } // namespace halfvec
+
+// C++ versions of the C macros
+#define DatumGetHalfVector(x) (halfvec::HalfVector<>::from_datum(x))
+#define PG_GETARG_HALFVEC_P(x) (halfvec::HalfVector<>::from_arg(x))
+#define PG_RETURN_HALFVEC_P(x) (halfvec::HalfVector<>::return_pointer(x))
 
 #endif // HALFVEC_HPP
